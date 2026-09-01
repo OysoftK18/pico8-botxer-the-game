@@ -3,11 +3,13 @@ player = {
     y = mobs_y,
     sprt = 64,
     stats = {
-        health = 100,
-        defense = 10,
-        power = 2,
-        speed = 2,
-        stamina = 10,
+        hp = 100, -- health
+        str = 2, -- strength
+        def = 1, -- defense
+        sta = 10, -- stamina
+        guard = 10, -- guard life
+        momentum = 0, -- boost
+        clinch_ticks = 3 -- can be moved
     },
     draw = function(self)
         spr(self.sprt, 7 * 8, 5 * 8)
@@ -20,11 +22,13 @@ newbie = {
     y = mobs_y,
     sprt = 64,
     stats = {
-        health = 100,
-        defense = 10,
-        power = 2,
-        speed = 2,
-        stamina = 10,
+        hp = 100, -- health
+        str = 2, -- strength
+        def = 1, -- defense
+        sta = 10, -- stamina
+        guard = 10, -- guard life
+        momentum = 0, -- boost
+        clinch_ticks = 3 -- can be moved
     },
     draw = function(self)
         spr(self.sprt, 8 * 8, 5 * 8)

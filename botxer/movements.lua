@@ -40,7 +40,7 @@ movements = {
     dodge = {
         nm = "dodge", multiplier = .5,
         card_sprite = 162, mob_sprite = 82,
-        type = "defense",
+        type = "dodge",
         trigger_condition = "hit",
         boosts = "punch"
     },
@@ -48,14 +48,14 @@ movements = {
     block = {
         nm = "block", multiplier = .2,
         card_sprite = 160, mob_sprite = 80,
-        type = "defense",
+        type = "block",
         trigger_condition = "hit"
     },
 
     parry = {
         nm = "parry", multiplier = 0,
         card_sprite = 164, mob_sprite = 96,
-        type = "defense",
+        type = "parry",
         trigger_condition = "punch",
         boosts = "power"
     },

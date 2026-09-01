@@ -65,12 +65,46 @@ function calculation_actions(p, o)
     if p and o then
         player.sprt = p.mob_sprite
         newbie.sprt = o.mob_sprite
+
+        if (ispunch(p.type)) then 
+            -- punch vs punch
+            if (ispunch(o.type)) then
+                player.stats.hp -= newbie.str * o.mult
+                player.stats.sta -= 1
+
+                newbie.stats.hp -= player.dmg * p.mult
+                newbie.stats.sta -= 1
+            end
+            
+            if (ispower(o.type)) then
+                player.stats.hp -= newbie.dmg * 1.8
+                player.stats.sta -= 2.5
+            end
+            
+            if (isblock(o.type)) then
+                player.stats.sta -= 1
+
+                
+                newbie.stats.hp -= player.dmg - newbie.defense
+                newbie.stats.g -= 1
+            end
+            
+            if (isdodge(o.type)) then
+                player.stats.sta -= 1
+
+                newbie.stats.sta += 1.5
+                newbie.stats.momentum += 1.5
+            end
+        end
         return
     end
     if p then
         player.sprt = p.mob_sprite
-        if (p.type == "power" or p.type == "punch") then
-            newbie.stats.health -= p.dmg
+        if (ispunch(p.type)) then 
+            newbie.hp -= p.dmg
+        end
+        if (ispower(p.type)) then 
+            newbie.hp -= p.dmg
         end
     end
     if o then
@@ -78,8 +112,29 @@ function calculation_actions(p, o)
         if (o.type == "power" or o.type =="punch") then
             player.stats.health -= o.dmg
         end
+        if (ispower(o.type)) then
+                player.stats.hp -= newbie.dmg * 1.8
+                player.stats.sta -= 2.5
+        end
     end
 
     printh("pl health: " .. player.stats.health, "test")
     printh("op health: " .. newbie.stats.health, "test")
+end
+
+
+function ispunch(tp)
+    return tp == "punch"
+end
+
+function ispower(tp)
+    return tp == "power"
+end
+
+function isdodge(tp)
+    return tp == "dodge"
+end
+
+function isblock(tp)
+    return tp == "block"
 end
