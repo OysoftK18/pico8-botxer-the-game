@@ -7,6 +7,8 @@ __lua__
 #include movements.lua
 
 #include mobs.lua
+#include operations.lua
+#include validators.lua
 #include mouse_manager.lua
 #include action_manager.lua
 #include dimens.lua

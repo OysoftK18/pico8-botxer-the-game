@@ -11,6 +11,7 @@ function _init()
     })
   end
   en_seq = {}
+  enemy = newbie:new()
 end
 
 function _update()

@@ -60,81 +60,76 @@ function update_action_playing(i)
         select.y = 0
     end
 end
-
+--Missing clinch logic also other scenarios
 function calculation_actions(p, o)
     if p and o then
         player.sprt = p.mob_sprite
         newbie.sprt = o.mob_sprite
-
+        local dmg = 0
         if (ispunch(p.type)) then 
-            -- punch vs punch
             if (ispunch(o.type)) then
-                player.stats.hp -= newbie.str * o.mult
-                player.stats.sta -= 1
+                dmg = calculation_base_damage(player.dmg, p.dmg, p.mult)
+                do_damage(newbie, dmg)
+                dmg = calculation_base_damage(newbie.dmg, o.dmg, o.mult)
+                do_damage(player, dmg)
 
-                newbie.stats.hp -= player.dmg * p.mult
-                newbie.stats.sta -= 1
+                if (isbody(o.nm)) then
+                    reduce_body(player)
+                end 
+                if (isbody(p.nm)) then
+                    reduce_body(newbie)
+                end 
+                return
             end
             
             if (ispower(o.type)) then
-                player.stats.hp -= newbie.dmg * 1.8
-                player.stats.sta -= 2.5
+                dmg = calculation_base_damage(newbie.dmg, o.dmg, o.mult)
+                do_damage(player, dmg)
+                return
             end
             
             if (isblock(o.type)) then
-                player.stats.sta -= 1
 
-                
-                newbie.stats.hp -= player.dmg - newbie.defense
-                newbie.stats.g -= 1
             end
             
             if (isdodge(o.type)) then
-                player.stats.sta -= 1
-
-                newbie.stats.sta += 1.5
-                newbie.stats.momentum += 1.5
+                reduce_stamina(player)
+                return 
             end
+
+            if (isparry(o.type)) then
+                dmg = calculation_actions(player.dmg+1, p.dmg , o.mult)
+                reduce_stamina(player)
+                do_damage(player, dmg)
+                return
+            end
+            return
         end
+
+            
         return
     end
     if p then
         player.sprt = p.mob_sprite
-        if (ispunch(p.type)) then 
-            newbie.hp -= p.dmg
+        if (isblock(p.type) or isdodge(p.type) or isparry(p.type)) then
+            reduce_stamina(player)
+            return
         end
-        if (ispower(p.type)) then 
-            newbie.hp -= p.dmg
-        end
+
+        local dmg = calculation_base_damage(player.dmg, p.dmg, p.mult)
+        do_damage(newbie, dmg)
+        return
     end
+
     if o then
-        newbie.sprt = o.mob_sprite
-        if (o.type == "power" or o.type =="punch") then
-            player.stats.health -= o.dmg
+        newbie.sprt = p.mob_sprite
+        if (isblock(o.type) or isdodge(o.type) or isparry(o.type)) then
+            reduce_stamina(newbie)
+            return
         end
-        if (ispower(o.type)) then
-                player.stats.hp -= newbie.dmg * 1.8
-                player.stats.sta -= 2.5
-        end
+
+        local dmg = calculation_base_damage(newbie.dmg, o.dmg, o.mult)
+        do_damage(player, dmg)
+        return
     end
-
-    printh("pl health: " .. player.stats.health, "test")
-    printh("op health: " .. newbie.stats.health, "test")
-end
-
-
-function ispunch(tp)
-    return tp == "punch"
-end
-
-function ispower(tp)
-    return tp == "power"
-end
-
-function isdodge(tp)
-    return tp == "dodge"
-end
-
-function isblock(tp)
-    return tp == "block"
 end

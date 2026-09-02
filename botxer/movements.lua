@@ -22,7 +22,7 @@ movements = {
     },
 
     uppercut = {
-        nm = "uppercut", dmg = 3, multiplier = 1,
+        nm = "uppercut", dmg = 3, multiplier = 2,
         card_sprite = 132, mob_sprite = 98,
         type = "power",
         trigger_condition = "blocked",
@@ -53,7 +53,7 @@ movements = {
     },
 
     parry = {
-        nm = "parry", multiplier = 0,
+        nm = "parry", multiplier = 3,
         card_sprite = 164, mob_sprite = 96,
         type = "parry",
         trigger_condition = "punch",
