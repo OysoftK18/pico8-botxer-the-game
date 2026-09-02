@@ -24,7 +24,7 @@ function timer_manager()
 
     if (current_frame == 20) then
         player.sprt = 64
-        newbie.sprt = 64
+        enemy.sprt = 64
         current_movement += 1
         current_frame = 0
     end
@@ -62,74 +62,124 @@ function update_action_playing(i)
 end
 --Missing clinch logic also other scenarios
 function calculation_actions(p, o)
-    if p and o then
-        player.sprt = p.mob_sprite
-        newbie.sprt = o.mob_sprite
-        local dmg = 0
-        if (ispunch(p.type)) then 
-            if (ispunch(o.type)) then
-                dmg = calculation_base_damage(player.dmg, p.dmg, p.mult)
-                do_damage(newbie, dmg)
-                dmg = calculation_base_damage(newbie.dmg, o.dmg, o.mult)
-                do_damage(player, dmg)
+    if p and not o then
+        -- Solo Player Attacks
+        if ispunch(p.type) or ispower(p.type) then
+            local dmg = calculation_base_damage(player.stats.str, p.dmg, p.mult)
+            do_damage(enemy, dmg)
+            if isbody(p.nm) then reduce_body(enemy) end
 
-                if (isbody(o.nm)) then
-                    reduce_body(player)
-                end 
-                if (isbody(p.nm)) then
-                    reduce_body(newbie)
-                end 
-                return
-            end
-            
-            if (ispower(o.type)) then
-                dmg = calculation_base_damage(newbie.dmg, o.dmg, o.mult)
-                do_damage(player, dmg)
-                return
-            end
-            
-            if (isblock(o.type)) then
-
-            end
-            
-            if (isdodge(o.type)) then
-                reduce_stamina(player)
-                return 
-            end
-
-            if (isparry(o.type)) then
-                dmg = calculation_actions(player.dmg+1, p.dmg , o.mult)
-                reduce_stamina(player)
-                do_damage(player, dmg)
-                return
-            end
-            return
-        end
-
-            
-        return
-    end
-    if p then
-        player.sprt = p.mob_sprite
-        if (isblock(p.type) or isdodge(p.type) or isparry(p.type)) then
+            -- Solo Player Defenses / Actions (whiffed defense costs stamina)
+        elseif isdodge(p.type) or isblock(p.type) or isparry(p.type) then
             reduce_stamina(player)
-            return
         end
-
-        local dmg = calculation_base_damage(player.dmg, p.dmg, p.mult)
-        do_damage(newbie, dmg)
         return
     end
 
-    if o then
-        newbie.sprt = p.mob_sprite
-        if (isblock(o.type) or isdodge(o.type) or isparry(o.type)) then
-            reduce_stamina(newbie)
-            return
-        end
+    if o and not p then
+        -- Solo Enemy Attacks
+        if ispunch(o.type) or ispower(o.type) then
+            local dmg = calculation_base_damage(enemy.stats.str, o.dmg, o.mult)
+            do_damage(player, dmg)
+            if isbody(o.nm) then reduce_body(player) end
 
-        local dmg = calculation_base_damage(newbie.dmg, o.dmg, o.mult)
+            -- Solo Enemy Defenses / Actions (whiffed defense costs stamina)
+        elseif isdodge(o.type) or isblock(o.type) or isparry(o.type) then
+            reduce_stamina(enemy)
+        end
+        return
+    end
+    
+    local p_def = isdodge(p.type) or isblock(p.type) or isparry(p.type)
+    local o_def = isdodge(o.type) or isblock(o.type) or isparry(o.type)
+
+    if p_def and o_def then
+        reduce_stamina_both()
+        return
+    end
+
+    -- B. Power vs Power (Intended clash)
+    if ispower(p.type) and ispower(o.type) then
+        local combined_str = player.stats.str + enemy.stats.str
+        local dmg = calculation_base_damage(combined_str, o.dmg, o.mult)
         do_damage(player, dmg)
+        do_damage(enemy, dmg)
         return
     end
+
+    -- C. Resolved Actions (Attacker vs Defender/Counter)
+    local function evaluate_attack(atk_move, def_move, attacker, defender)
+        -- Punch vs Punch
+        if ispunch(atk_move.type) and ispunch(def_move.type) then
+            local dmg = calculation_base_damage(attacker.stats.str, atk_move.dmg, atk_move.mult)
+            do_damage(defender, dmg)
+            if isbody(atk_move.nm) then reduce_body(defender) end
+
+            -- Power vs Punch (Power user hits, Punch user gets beat out)
+        elseif ispower(atk_move.type) and ispunch(def_move.type) then
+            local dmg = calculation_base_damage(attacker.stats.str, atk_move.dmg, atk_move.mult)
+            do_damage(defender, dmg)
+
+            -- Attack vs Dodge
+        elseif (ispunch(atk_move.type) or ispower(atk_move.type)) and isdodge(def_move.type) then
+            reduce_stamina(attacker)
+
+            -- Attack vs Parry
+        elseif (ispunch(atk_move.type) or ispower(atk_move.type)) and isparry(def_move.type) then
+            local dmg = calculation_actions(defender.stats.str + 1, def_move.dmg, def_move.mult)
+            reduce_stamina(defender)
+            do_damage(attacker, dmg)
+
+            -- Attack vs Block
+        elseif (ispunch(atk_move.type) or ispower(atk_move.type)) and isblock(def_move.type) then
+            -- calculate_defense(attacker, defender, atk_move, def_move)
+        end
+    end
+
+    -- Run symmetrically for both sides
+    evaluate_attack(p, o, player, enemy)
+    evaluate_attack(o, p, enemy, player)
+end
+
+local function resolve_combat(p, o, player, enemy)
+    -- 1. Defenses vs Defenses
+    local p_def = isdodge(p.type) or isblock(p.type) or isparry(p.type)
+    local o_def = isdodge(o.type) or isblock(o.type) or isparry(o.type)
+
+    if p_def and o_def then
+        reduce_stamina_both()
+        return
+    end
+
+    -- 2. Power vs Power (Intended clash)
+    if ispower(p.type) and ispower(o.type) then
+        local combined_str = player.stats.str + enemy.stats.str
+        local dmg = calculation_base_damage(combined_str, o.dmg, o.mult)
+        do_damage(player, dmg)
+        do_damage(enemy, dmg)
+        return
+    end
+
+    -- 3. Resolve Attacker (p) vs Defender/Counter (o)
+    local function evaluate_attack(atk_move, def_move, attacker, defender)
+        if ispunch(atk_move.type) and ispunch(def_move.type) then
+            local dmg = calculation_base_damage(attacker.stats.str, atk_move.dmg, atk_move.mult)
+            do_damage(defender, dmg)
+            if isbody(atk_move.nm) then reduce_body(defender) end
+        elseif ispunch(atk_move.type) and ispower(def_move.type) then
+            -- Intended: Power beats Punch completely
+            local dmg = calculation_base_damage(defender.stats.str, def_move.dmg, def_move.mult)
+            do_damage(attacker, dmg)
+        elseif isdodge(def_move.type) and (ispunch(atk_move.type) or ispower(atk_move.type)) then
+            reduce_stamina(attacker)
+        elseif isparry(def_move.type) and (ispunch(atk_move.type) or ispower(atk_move.type)) then
+            local dmg = calculation_actions(defender.stats.str + 1, def_move.dmg, def_move.mult)
+            reduce_stamina(defender)
+            do_damage(attacker, dmg)
+        end
+    end
+
+    -- Run interaction symmetrically
+    evaluate_attack(p, o, player, enemy)
+    evaluate_attack(o, p, enemy, player)
 end

@@ -13,7 +13,7 @@ player = {
 
         str = 2, -- strength
         def = 1, -- defense
-        spirit = 0, -- boost
+        spirit = 0 -- boost
     },
     draw = function(self)
         spr(self.sprt, 7 * 8, 5 * 8)
@@ -36,18 +36,17 @@ newbie = {
 
         str = 2, -- strength
         def = 1, -- defense
-        spirit = 0, -- boost
+        spirit = 0 -- boost
     },
     draw = function(self)
         spr(self.sprt, 8 * 8, 5 * 8)
     end,
     seqs = {
-        {nil, nil, nil, nil, nil, nil, nil}, -- Descanso total
-        {movements.jab, movements.cross, movements.jab, movements.cross, movements.jab, movements.cross, movements.hook},
-        {movements.jab, movements.cross, nil, nil, nil, nil, nil},
-        {nil, movements.jab, movements.jab, movements.cross, nil, nil, nil},
-        {movements.body, movements.body, movements.cross, nil, nil, nil, nil}
+        { nil, nil, nil, nil, nil, nil, nil }, -- Descanso total
+        { movements.jab, movements.cross, movements.jab, movements.cross, movements.jab, movements.cross, movements.hook },
+        { movements.jab, movements.cross, nil, nil, nil, nil, nil },
+        { nil, movements.jab, movements.jab, movements.cross, nil, nil, nil },
+        { movements.body, movements.body, movements.cross, nil, nil, nil, nil }
     }
 }
 newbie.__index = newbie
-
